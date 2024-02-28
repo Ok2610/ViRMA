@@ -6,6 +6,7 @@ using Valve.VR.InteractionSystem;
 using TMPro;
 using Valve.VR;
 using System.Linq;
+using System.Diagnostics;
 
 public class ViRMA_MainMenu : MonoBehaviour
 {
@@ -94,6 +95,8 @@ public class ViRMA_MainMenu : MonoBehaviour
         StartCoroutine(SetupLocationPicker());
 
         ToggleMenuSection(section_dimensionBrowser);
+
+        //globals.queryController.buildingQuery.SetAxis("X", 7, "tagset");
     }
 
     private void Update()
@@ -465,7 +468,7 @@ public class ViRMA_MainMenu : MonoBehaviour
             {
                 int parentIdIndex = activeFilter.FilterId.IndexOf("_");
                 string parentId = activeFilter.FilterId.Substring(parentIdIndex + 1);
-                StartCoroutine(ViRMA_APIController.GetTagset(parentId, (tagsetData) => {
+                StartCoroutine(ViRMA_APIController.GetTagset(parentId+1, (tagsetData) => {
                     foreach (Tag tagData in tagsetData)
                     {
                         foreach (int id in activeFilter.Ids)
@@ -806,11 +809,13 @@ public class ViRMA_MainMenu : MonoBehaviour
             Tag tagData = (Tag)uiElement.buttonData;
             if (uiElement.isToggled)
             {
-                globals.queryController.buildingQuery.RemoveFilter(tagData.Id, "tag", tagData.Parent.Id);
+                UnityEngine.Debug.Log("RemoveFilter: " + tagData.Id);
+                globals.queryController.buildingQuery.RemoveFilter(tagData.Id, "tagset", tagData.Parent.Id); // OK: Changed from tag to tagset
             }
             else
             {
-                globals.queryController.buildingQuery.AddFilter(tagData.Id, "tag", tagData.Parent.Id);
+                UnityEngine.Debug.Log("AddFilter: " + tagData.Id);
+                globals.queryController.buildingQuery.AddFilter(tagData.Id, "tagset"); // OK: Changed from tag to tagset
             }
         }
     }

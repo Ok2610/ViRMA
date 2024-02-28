@@ -338,8 +338,8 @@ public class ViRMA_APIController : MonoBehaviour
         }
         localMediaType = fileType;
         localMediaDirectory = "D:/Datasets/VBS2022/";
-        remoteMediaDirectory = "http://bjth.itu.dk:5008/";
-        remoteThumbnailMediaDirectory = "http://bjth.itu.dk:5008/";
+        remoteMediaDirectory = "http://bjth.itu.dk:5003/";
+        remoteThumbnailMediaDirectory = "http://bjth.itu.dk:5005/";
         database = "VBS";
     }
 
@@ -348,8 +348,8 @@ public class ViRMA_APIController : MonoBehaviour
     public static IEnumerator GetRequest(string paramsURL, Action<JSONNode> onSuccess)
     {
         // set correct database settings
-        //SetVBS2022();
-        SetLSC2022(true, "DDS"); 
+        SetVBS2022();
+        //SetLSC2022(true, "DDS"); 
 
         string getRequest = restAPI + paramsURL;
         float beforeWebRequest = 0, afterWebRequest = 0, beforeJsonParse = 0, afterJsonParse = 0;
@@ -497,6 +497,7 @@ public class ViRMA_APIController : MonoBehaviour
                 // newCell.ImageName = obj.Value["CubeObjects"][0]["FileURI"];
 
                 newCell.ImageName = obj.Value["cubeObjects"][0]["fileURI"];
+                Debug.Log(newCell.ImageName);
                 //string imageNameDDS = newCell.ImageName.Substring(0, newCell.ImageName.Length - 4) + ".dds";
                 //newCell.ImageName = imageNameDDS;
                 newCell.imageCount = obj.Value["count"];
@@ -807,13 +808,17 @@ public class ViRMA_APIController : MonoBehaviour
     }
     public static IEnumerator GetContextTimeline(DateTime timestamp, int minutes, Action<List<KeyValuePair<int, string>>> onSuccess)
     {
+        Debug.Log("timestamp: " + timestamp);
+        Debug.Log("minutes: " + minutes);
         // OLD: cell?filters=[{'type':'daterange','ids':['2'],'ranges':[['23-08-2016','23-08-2016']]},{'type':'timerange','ids':['3'],'ranges':[['10:00','11:00']]}]&all=[]
         // NEW: cell?filters=[{'type':'timestamprange','ids':['18'],'ranges':[['2016-09-24T19:26:00','2016-09-24T21:26:00']]}]&all=[]
 
         TimeSpan timeSpan = new TimeSpan(0, minutes, 0);
+        Debug.Log("timespan: " + timeSpan);
         DateTime future = timestamp.Add(timeSpan);
+        Debug.Log("future: " + future);
         DateTime past = timestamp.Subtract(timeSpan);
-
+        Debug.Log("past: " + past);
         string timestampTagsetIdUTC = "19";
         // confirm tagset ID for UTC timestamp is correct
         yield return GetRequest("tagset/", (tagsets) =>
@@ -830,7 +835,7 @@ public class ViRMA_APIController : MonoBehaviour
             }
         });
 
-        string url = "cell?filters=[{'type':'timestamprange','ids':['" + timestampTagsetIdUTC + "'],'ranges':[['" + past.ToString("dd/MM/yyyy HH:mm:ss") + "','" + future.ToString("dd/MM/yyyy HH:mm:ss") + "']]}]&all=[]";
+        string url = "cell?filters=[{'type':'timestamprange','ids':['" + timestampTagsetIdUTC + "'],'ranges':[['" + past.ToString("yyyy-MM-dd HH:mm:ss") + "','" + future.ToString("yyyy-MM-dd HH:mm:ss") + "']]}]&all=[]";
 
         Debug.Log("GetTimeline: " + url); // debugging
 

@@ -23,7 +23,7 @@ public class ViRMA_CompetitionController : MonoBehaviour
             {
                 // C:/Users/aaron/OneDrive - ITU/ViRMA/PhotoCube SQL Resources/
 
-                convertVBS = File.ReadLines("C:/Users/aaron/OneDrive - ITU/ViRMA/PhotoCube SQL Resources/VBS-id-converter.csv").Select(line => line.Split(',')).ToDictionary(line => line[0], line => line[1]);
+                // convertVBS = File.ReadLines("C:/Users/aaron/OneDrive - ITU/ViRMA/PhotoCube SQL Resources/VBS-id-converter.csv").Select(line => line.Split(',')).ToDictionary(line => line[0], line => line[1]);
                 vbsConversionReady = true;
 
                 Debug.LogWarning("VBS conversion CSV loaded successfully!");

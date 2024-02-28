@@ -92,6 +92,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
 
     public void LoadTimelineChild(int targetId, string targetFilename)
     {
+        Debug.Log("Target Id: " + targetId);
         id = targetId;
         fileName = targetFilename;
         name = id + "_" + fileName;
@@ -223,6 +224,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
     }
     public void GetTimelineChildMetadata()
     {
+        //Debug.Log("Metadata for child");
         if (id != 0)
         {
             StartCoroutine(ViRMA_APIController.GetMediaObjectTagData(id, (results) => {
@@ -244,7 +246,8 @@ public class ViRMA_TimelineChild : MonoBehaviour
             }
             if (tagData.Label == "Timestamp UTC")
             {
-                if (DateTime.TryParseExact(tagData.Children[0].Label, "dd/MM/yyyy HH:mm:ss", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))
+                Debug.Log("Timestamp UTC: " + tagData.Children[0].Label);
+                if (DateTime.TryParseExact(tagData.Children[0].Label, "dd-MM-yyyy HH:mm:ss", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))
                 {
                     timestampUTC = parsedTimestamp;
                 }
@@ -278,27 +281,31 @@ public class ViRMA_TimelineChild : MonoBehaviour
 
         if (ViRMA_APIController.database == "VBS")
         {
-            
-            int firstSlash = fileName.IndexOf("/");
+            // Old format of VBS URL thumbnails/kf_name.jpg
+            // int firstSlash = fileName.IndexOf("/");
 
-            string imageType = fileName.Substring(0, firstSlash);
-            imageType= imageType.Substring(0, imageType.Length - 1);
+            // string imageType = fileName.Substring(0, firstSlash);
+            // imageType= imageType.Substring(0, imageType.Length - 1);
 
-            string remainingSlash = fileName.Substring(firstSlash + 1);
-            int secondSlash = remainingSlash.IndexOf("/");
-            string videoId = fileName.Substring(firstSlash + 1, secondSlash);
+            // string remainingSlash = fileName.Substring(firstSlash + 1);
+            // int secondSlash = remainingSlash.IndexOf("/");
+            // string videoId = fileName.Substring(firstSlash + 1, secondSlash);
 
-            int underScore = fileName.IndexOf("_");
-            string keyframeCount = fileName.Substring(underScore + 1);
-            keyframeCount = keyframeCount.Substring(0, keyframeCount.Length - 4);
+            // int underScore = fileName.IndexOf("_");
+            // string keyframeCount = fileName.Substring(underScore + 1);
+            // keyframeCount = keyframeCount.Substring(0, keyframeCount.Length - 4);
 
-            timelineChildLabel.name = imageType + " | " + videoId + " | " + keyframeCount;
-            textMesh.text = imageType + " | " + videoId + " | " + keyframeCount;
+            // timelineChildLabel.name = imageType + " | " + videoId + " | " + keyframeCount;
+            // textMesh.text = imageType + " | " + videoId + " | " + keyframeCount;
 
-            if (imageType == "sample")
-            {
-                transform.Translate(Vector3.down * 0.05f);
-            }
+            // if (imageType == "sample")
+            // {
+            //     transform.Translate(Vector3.down * 0.05f);
+            // }
+
+            timelineChildLabel.name = fileName;
+            textMesh.text = fileName;
+
         }
 
         metadataLoaded = true;
