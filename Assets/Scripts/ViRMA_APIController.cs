@@ -337,7 +337,7 @@ public class ViRMA_APIController : MonoBehaviour
             fileType = "JPG";
         }
         localMediaType = fileType;
-        localMediaDirectory = "D:/Datasets/VBS2022/";
+        localMediaDirectory = "C:/Users/ViRMA-Video/Datasets/VBS/";
         remoteMediaDirectory = "http://bjth.itu.dk:5003/";
         remoteThumbnailMediaDirectory = "http://bjth.itu.dk:5005/";
         database = "VBS";
@@ -348,7 +348,7 @@ public class ViRMA_APIController : MonoBehaviour
     public static IEnumerator GetRequest(string paramsURL, Action<JSONNode> onSuccess)
     {
         // set correct database settings
-        SetVBS2022();
+        SetVBS2022(true);
         //SetLSC2022(true, "DDS"); 
 
         string getRequest = restAPI + paramsURL;
@@ -836,6 +836,7 @@ public class ViRMA_APIController : MonoBehaviour
         });
 
         string url = "cell?filters=[{'type':'timestamprange','ids':['" + timestampTagsetIdUTC + "'],'ranges':[['" + past.ToString("yyyy-MM-dd HH:mm:ss") + "','" + future.ToString("yyyy-MM-dd HH:mm:ss") + "']]}]&all=[]";
+        // string url = "cell?filters=[{'type':'timestamprange','ids':['" + timestampTagsetIdUTC + "'],'ranges':[['" + past.ToString("dd-MM-yyyy HH:mm:ss") + "','" + future.ToString("dd-MM-yyyy HH:mm:ss") + "']]}]&all=[]";
 
         Debug.Log("GetTimeline: " + url); // debugging
 

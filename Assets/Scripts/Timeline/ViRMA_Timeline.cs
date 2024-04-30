@@ -55,6 +55,10 @@ public class ViRMA_Timeline : MonoBehaviour
     private GameObject feedback;
     public GameObject metadataTooltip;
 
+    private GameObject videoPlayer;
+    private GameObject videoPlayerPrefab;
+    public VideoPlayerController videoPlayerController;
+
     private void Awake()
     {
         globals = Player.instance.gameObject.GetComponent<ViRMA_GlobalsAndActions>();
@@ -74,6 +78,7 @@ public class ViRMA_Timeline : MonoBehaviour
     {
         timelineChildPrefab = Resources.Load("Prefabs/CellPrefab") as GameObject;
         timelineNavPrefab = Resources.Load("Prefabs/TimelineNavPrefab") as GameObject;
+        videoPlayerPrefab = Resources.Load("Prefabs/VideoPlayer") as GameObject;
     }
     private void Update()
     {
@@ -450,7 +455,24 @@ public class ViRMA_Timeline : MonoBehaviour
         currentTimelineSection = sectionIndex;
 
         timelineLoaded = true;
+
+        SpawnVideoPlayer();
     }
+
+    private void SpawnVideoPlayer()
+    {
+        if (videoPlayer == null) {
+            videoPlayer = Instantiate(videoPlayerPrefab);
+            videoPlayer.transform.localScale = Vector3.one * 0.5f;
+            videoPlayer.transform.rotation = transform.rotation;
+            videoPlayer.transform.position = transform.position;
+            videoPlayer.transform.Translate(Vector3.up * 0.4f);
+
+            if (videoPlayerController == null)
+                videoPlayerController = videoPlayer.GetComponent<VideoPlayerController>();
+        }
+    }
+
     public void LoadCellContentTimelineData(GameObject submittedCell)
     {
         isContextTimeline = false;
@@ -661,6 +683,11 @@ public class ViRMA_Timeline : MonoBehaviour
                     StartCoroutine(SubmissionFeedback(btnOption.targetTimelineChild, result));
                 }));
             }
+
+            if (btnOption.btnType.ToLower() == "load")
+            {
+                videoPlayerController?.setVideo(btnOption.targetTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName);
+            }
         }
     }
     public void BackButton(SteamVR_Action_Boolean action, SteamVR_Input_Sources source)
@@ -678,6 +705,11 @@ public class ViRMA_Timeline : MonoBehaviour
             {
                 ClearTimeline(true);
                 globals.vizController.HideViz(false);
+
+                // Destroy video player
+                Destroy(videoPlayer);
+                videoPlayer = null;
+                videoPlayerController = null;
             }
         }
     }

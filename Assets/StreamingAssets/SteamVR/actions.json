@@ -104,6 +104,10 @@
     {
       "name": "/actions/Timeline/in/Back",
       "type": "boolean"
+    },
+    {
+      "name": "/actions/VideoPlayer/in/Select",
+      "type": "boolean"
     }
   ],
   "action_sets": [
@@ -125,6 +129,10 @@
     },
     {
       "name": "/actions/Timeline",
+      "usage": "single"
+    },
+    {
+      "name": "/actions/VideoPlayer",
       "usage": "single"
     }
   ],
