@@ -850,7 +850,7 @@ public class ViRMA_APIController : MonoBehaviour
         {
             int imageId = obj.Value["id"];
             string imagePath = obj.Value["fileURI"];
-
+            Debug.Log("imageId: " + imageId + " fileURI: " + imagePath);
             if (imagePath.Length > 0)
             {
                 KeyValuePair<int, string> imageIdPath = new KeyValuePair<int, string>(imageId, imagePath);

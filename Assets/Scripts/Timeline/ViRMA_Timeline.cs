@@ -5,6 +5,8 @@ using UnityEngine;
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using TMPro;
+using System.Linq;
+using UnityEditor.PackageManager;
 
 public class ViRMA_Timeline : MonoBehaviour
 {
@@ -55,9 +57,10 @@ public class ViRMA_Timeline : MonoBehaviour
     private GameObject feedback;
     public GameObject metadataTooltip;
 
-    private GameObject videoPlayer;
+    private GameObject mainVideoPlayer;
+    private List<GameObject> segmentVideoPlayers;
     private GameObject videoPlayerPrefab;
-    public VideoPlayerController videoPlayerController;
+    //public VideoPlayerController videoPlayerController;
 
     private void Awake()
     {
@@ -73,6 +76,8 @@ public class ViRMA_Timeline : MonoBehaviour
         timelinePositionDistance = 0.6f; // how far away to place the timeline in front of user
         resultsRenderSize = 50; // max results to render at a time
         contextTimelineTimespan = 60; // number of minutes on each side of target for context timeline
+
+        segmentVideoPlayers = new List<GameObject>();
     }
     private void Start()
     {
@@ -191,7 +196,7 @@ public class ViRMA_Timeline : MonoBehaviour
 
     // general
     public void ClearTimeline(bool hardReset = false)
-    {        
+    {   
         // flad as timeline as unloaded
         timelineLoaded = false;
 
@@ -456,21 +461,29 @@ public class ViRMA_Timeline : MonoBehaviour
 
         timelineLoaded = true;
 
-        SpawnVideoPlayer();
+        if (isContextTimeline && mainVideoPlayer == null) {
+            mainVideoPlayer = SpawnVideoPlayer(true);
+            mainVideoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetContextTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName, true);
+        }
     }
 
-    private void SpawnVideoPlayer()
+    private GameObject SpawnVideoPlayer(bool isMainPlayer=false)
     {
-        if (videoPlayer == null) {
-            videoPlayer = Instantiate(videoPlayerPrefab);
-            videoPlayer.transform.localScale = Vector3.one * 0.5f;
-            videoPlayer.transform.rotation = transform.rotation;
-            videoPlayer.transform.position = transform.position;
-            videoPlayer.transform.Translate(Vector3.up * 0.4f);
+        var newPlayer = Instantiate(videoPlayerPrefab);
+        var videoPlayerController = newPlayer.GetComponent<VideoPlayerController>();
+        videoPlayerController.inContext = isContextTimeline;
 
-            if (videoPlayerController == null)
-                videoPlayerController = videoPlayer.GetComponent<VideoPlayerController>();
+        if (isMainPlayer) {
+            newPlayer.transform.position = activeTimelinePosition + Vector3.up * 0.5f;
+            newPlayer.transform.rotation = activeTImelineRotation;
+            newPlayer.transform.localScale = new Vector3(0.75f, 0.75f, 0.75f);
+            videoPlayerController.localSegments = timelineSectionChildren.Select(x => x.GetComponent<ViRMA_TimelineChild>().fileName).ToList();
+        } else {
+            newPlayer.transform.position = activeTimelinePosition + Vector3.forward * 0.2f;
+            newPlayer.transform.rotation = activeTImelineRotation;
+            segmentVideoPlayers.Add(newPlayer);
         }
+        return newPlayer;
     }
 
     public void LoadCellContentTimelineData(GameObject submittedCell)
@@ -553,6 +566,11 @@ public class ViRMA_Timeline : MonoBehaviour
         {
             savedTimelineSection = currentTimelineSection;
             savedTimelineChildId = targetTimelineChild.id;
+        } else {
+            foreach (var vp in segmentVideoPlayers) {
+                Destroy(vp);
+            }
+            segmentVideoPlayers.Clear();
         }
 
         StartCoroutine(ViRMA_APIController.GetContextTimeline(targetTimelineChild.timestampUTC, contextTimelineTimespan, (results) => {
@@ -665,7 +683,11 @@ public class ViRMA_Timeline : MonoBehaviour
 
             if (btnOption.btnType.ToLower() == "context")
             {
-                LoadContextTimelineData(targetTimelineChild);
+                if (isContextTimeline) {
+                    mainVideoPlayer.GetComponent<VideoPlayerController>().SetContextVideo(btnOption.targetTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName);
+                } else {
+                    LoadContextTimelineData(targetTimelineChild);
+                }
             }
 
             if (btnOption.btnType.ToLower() == "data")
@@ -686,7 +708,8 @@ public class ViRMA_Timeline : MonoBehaviour
 
             if (btnOption.btnType.ToLower() == "load")
             {
-                videoPlayerController?.setVideo(btnOption.targetTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName);
+                var videoPlayer = SpawnVideoPlayer();
+                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(btnOption.targetTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName);
             }
         }
     }
@@ -705,13 +728,17 @@ public class ViRMA_Timeline : MonoBehaviour
             {
                 ClearTimeline(true);
                 globals.vizController.HideViz(false);
-
-                // Destroy video player
-                Destroy(videoPlayer);
-                videoPlayer = null;
-                videoPlayerController = null;
             }
-        }
+            // Destroy video players
+            foreach (var vp in segmentVideoPlayers) {
+                Destroy(vp);
+            }
+            segmentVideoPlayers.Clear();
+            if (mainVideoPlayer != null) {
+                Destroy(mainVideoPlayer);
+                mainVideoPlayer = null;
+            }
+            }
     }
 
 

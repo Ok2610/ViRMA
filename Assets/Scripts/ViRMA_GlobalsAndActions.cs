@@ -2,6 +2,8 @@
 using Valve.VR;
 using Valve.VR.InteractionSystem;
 using System;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 
 public class ViRMA_GlobalsAndActions : MonoBehaviour
 {
@@ -50,6 +52,26 @@ public class ViRMA_GlobalsAndActions : MonoBehaviour
     public SteamVR_Action_Boolean timeline_Select;
     public SteamVR_Action_Boolean timeline_Scroll;
     public SteamVR_Action_Boolean timeline_Back;
+    public Dictionary<string, List<SegmentData>> globalSegmentData = new Dictionary<string, List<SegmentData>>();
+    public struct SegmentData {
+        public int startFrame;
+        public int endFrame;
+        public int frameCount;
+
+        public SegmentData(int start, int end, int frameCount) {
+            startFrame = start;
+            endFrame = end;
+            this.frameCount = frameCount;
+        }
+
+        public SegmentData(List<int> data) {
+            startFrame = data[0];
+            endFrame = data[1];
+            frameCount = data[2];
+        }
+    }
+
+    
 
     private void Awake()
     {
@@ -65,7 +87,29 @@ public class ViRMA_GlobalsAndActions : MonoBehaviour
 
         // assign specific actions to functionality in ViRMA scripts
         AssignAllCustomActions();
+
+        LoadVideoData();
     }
+
+    // Temp Until fields are added to the database
+    private void LoadVideoData()
+    {
+        string jsonPath = "Assets/Resources/reduced_shots_frames.json";
+        string json = System.IO.File.ReadAllText(jsonPath);
+        var videoData = JsonConvert.DeserializeObject<Dictionary<string, List<List<int>>>>(json);
+
+        foreach (var entry in videoData) {
+            List<SegmentData> sd = new List<SegmentData>();
+            foreach (var segment in entry.Value) {
+                var x = new SegmentData(segment);
+
+                sd.Add(x);
+            }
+            globalSegmentData.Add(entry.Key, sd);
+        }
+        //Debug.Log(globalSegmentData.Count);
+    }
+
     private void Update()
     {
         // SteamVR controller models take some frames to load so this waits for them to set some globals

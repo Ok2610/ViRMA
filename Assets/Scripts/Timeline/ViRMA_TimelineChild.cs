@@ -23,7 +23,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
 
     // timeline child data
     public List<Tag> tagsData;      
-    public DateTime timestampUTC;   
+    public DateTime timestampUTC;
     public DateTime timestampLOC;
     private bool metadataLoaded;
 
@@ -92,7 +92,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
 
     public void LoadTimelineChild(int targetId, string targetFilename)
     {
-        Debug.Log("Target Id: " + targetId);
+        //Debug.Log("Target Id: " + targetId);
         id = targetId;
         fileName = targetFilename;
         name = id + "_" + fileName;
@@ -246,10 +246,9 @@ public class ViRMA_TimelineChild : MonoBehaviour
             }
             if (tagData.Label == "Timestamp UTC")
             {
-                Debug.Log("Timestamp UTC: " + tagData.Children[0].Label);
-                if (DateTime.TryParseExact(tagData.Children[0].Label, "MM/dd/yyyy HH:mm:ss", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))                {
+                if (DateTime.TryParseExact(tagData.Children[0].Label, "dd/MM/yyyy HH:mm:ss", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))                {
                     timestampUTC = parsedTimestamp;
-                    Debug.Log("parsedTime:" + timestampUTC);
+                    // Debug.Log("parsedTime:" + timestampUTC);
                 }
             }
         }
@@ -401,35 +400,4 @@ public class ViRMA_TimelineChild : MonoBehaviour
         yield return new WaitForSeconds(1);
         globals.vizController.HideViz(true);
     }
-
-    // public void LoadTimelineChildVideoPlayer()
-    // {
-    //     // if (globals.timeline.videoPlayer)
-    //     // {
-    //     //     Destroy(globals.timeline.videoPlayer);
-    //     //     globals.timeline.videoPlayer = null;
-    //     // }
-
-    //     // GameObject timelineChildVideoPlayerPrefab = Resources.Load("Prefabs/TimelineChildVideoPlayer") as GameObject;
-    //     // GameObject timelineChildVideoPlayer = Instantiate(timelineChildVideoPlayerPrefab);
-    //     // timelineChildVideoPlayer.transform.localScale = Vector3.one * 0.5f;
-    //     // timelineChildVideoPlayer.transform.rotation = transform.rotation;
-    //     // timelineChildVideoPlayer.transform.position = transform.position;
-    //     // timelineChildVideoPlayer.transform.Translate(Vector3.up * 0.35f);
-    //     // var sc = timelineChildVideoPlayer.GetComponent<VideoPlayerController>();
-    //     // globals.videoPlayer = sc;
-    //     // sc.video_url = fileName;
-    //     // sc.targetTimelineChild = gameObject;
-    //     // sc.Prepare();
-
-    //     // globals.timeline.videoPlayer = timelineChildVideoPlayer;
-
-
-    // }
-
-    // public void LoadVideo()
-    // {
-    //     globals.timeline.videoPlayer.setVideo(fileName);
-    // }
-
 }

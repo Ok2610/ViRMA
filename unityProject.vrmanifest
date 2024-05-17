@@ -5,7 +5,7 @@
       "app_key": "application.generated.unity.virma.exe",
       "launch_type": "url",
       "url": "steam://launch/",
-      "action_manifest_path": "C:\\Users\\ViRMA-Video\\Documents\\Projects\\PhotoCube\\ViRMA\\Assets\\StreamingAssets\\SteamVR\\actions.json",
+      "action_manifest_path": "G:\\ViRMA\\ViRMA-PCube-Loader\\ViRMA\\Assets\\StreamingAssets\\SteamVR\\actions.json",
       "strings": {
         "en_us": {
           "name": "ViRMA [Testing]"
