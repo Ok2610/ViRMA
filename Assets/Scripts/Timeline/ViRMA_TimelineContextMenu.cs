@@ -43,7 +43,7 @@ public class ViRMA_TimelineContextMenu : MonoBehaviour
         GameObject playBtn = Instantiate(contextMenuBtnPrefab, transform);
         playBtn.transform.localPosition = new Vector3(0.12f, 0.05f, -0.025f);
         playBtn.transform.localScale = playBtn.transform.localScale * 0.75f;
-        playBtn.GetComponent<ViRMA_TimeLineContextMenuBtn>().LoadTimelineContextMenuBtn("Load", targetTimelineChild);
+        playBtn.GetComponent<ViRMA_TimeLineContextMenuBtn>().LoadTimelineContextMenuBtn("Play", targetTimelineChild);
     }
 
     private void OnTriggerExit(Collider triggeredCol)

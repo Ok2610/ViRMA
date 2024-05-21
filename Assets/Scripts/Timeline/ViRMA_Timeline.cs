@@ -479,7 +479,7 @@ public class ViRMA_Timeline : MonoBehaviour
             newPlayer.transform.localScale = new Vector3(0.75f, 0.75f, 0.75f);
             videoPlayerController.localSegments = timelineSectionChildren.Select(x => x.GetComponent<ViRMA_TimelineChild>().fileName).ToList();
         } else {
-            newPlayer.transform.position = activeTimelinePosition + Vector3.forward * 0.2f;
+            newPlayer.transform.position = activeTimelinePosition + Vector3.back * 0.1f; // This suddenly worked differently, might be .forward instead of .back
             newPlayer.transform.rotation = activeTImelineRotation;
             segmentVideoPlayers.Add(newPlayer);
         }
@@ -706,10 +706,10 @@ public class ViRMA_Timeline : MonoBehaviour
                 }));
             }
 
-            if (btnOption.btnType.ToLower() == "load")
+            if (btnOption.btnType.ToLower() == "play")
             {
                 var videoPlayer = SpawnVideoPlayer();
-                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(btnOption.targetTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName);
+                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetTimelineChild.fileName);
             }
         }
     }
