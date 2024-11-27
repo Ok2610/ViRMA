@@ -26,8 +26,8 @@ public class ViRMA_Timeline : MonoBehaviour
     public int currentTimelineSection;
     public int totalTimeLineSections;
     public int totalContextTimelineSections;
-    public List<KeyValuePair<int, string>> cellContentResults;
-    public List<KeyValuePair<int, string>> contextTimelineResults;
+    public List<KeyValuePair<int, string[]>> cellContentResults;
+    public List<KeyValuePair<int, string[]>> contextTimelineResults;
     private int targetContextTimelineChildId;
     public GameObject targetContextTimelineChild;
     public int savedTimelineSection;
@@ -391,7 +391,7 @@ public class ViRMA_Timeline : MonoBehaviour
         timelineChildrenWrapper.transform.parent = transform;
 
         // choose correct data depending on type of timeline
-        List<KeyValuePair<int, string>> loadedTimelineResults;
+        List<KeyValuePair<int, string[]>> loadedTimelineResults;
         if (isContextTimeline)
         {
             loadedTimelineResults = contextTimelineResults;
@@ -411,7 +411,7 @@ public class ViRMA_Timeline : MonoBehaviour
 
         // get section range from results and render it
         targetContextTimelineChild = null;
-        List<KeyValuePair<int, string>> currentResultsSection = loadedTimelineResults.GetRange(startIndex, resultsToShow);
+        List<KeyValuePair<int, string[]>> currentResultsSection = loadedTimelineResults.GetRange(startIndex, resultsToShow);
         for (int i = 0; i < currentResultsSection.Count; i++)
         {
             // create timeline child game object using cell prefab
@@ -463,7 +463,7 @@ public class ViRMA_Timeline : MonoBehaviour
 
         if (isContextTimeline && mainVideoPlayer == null) {
             mainVideoPlayer = SpawnVideoPlayer(true);
-            mainVideoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetContextTimelineChild.GetComponent<ViRMA_TimelineChild>().fileName, true);
+            mainVideoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetContextTimelineChild.GetComponent<ViRMA_TimelineChild>().mediaURI, true);
         }
     }
 
@@ -709,7 +709,7 @@ public class ViRMA_Timeline : MonoBehaviour
             if (btnOption.btnType.ToLower() == "play")
             {
                 var videoPlayer = SpawnVideoPlayer();
-                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetTimelineChild.fileName);
+                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetTimelineChild.mediaURI);
             }
         }
     }

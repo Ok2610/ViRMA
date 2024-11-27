@@ -8,12 +8,14 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 using Valve.VR;
 using System.Globalization;
+using System.IO;
 
 public class VideoPlayerController : MonoBehaviour
 {
     public SteamVR_ActionSet actionSet;
     public SteamVR_Action_Boolean selectAction;
     private VideoPlayer videoPlayer;
+    private AudioSource audioSource;
     public GameObject screen;
     private readonly string updateTimeRegex = @"^[^/]+";
     public bool inContext = false;
@@ -41,20 +43,17 @@ public class VideoPlayerController : MonoBehaviour
     public TimeSpan segmentStart;
     private List<ViRMA_GlobalsAndActions.SegmentData> segmentData;
 
-
     // Temporary
-    private readonly string prefix = "10vids/";
-    private readonly string suffix = ".mp4";
-
-    private readonly string localMediaDirectory = "C:/Users/ViRMA-Video/Datasets/VBS/";
+    private readonly string localMediaDirectory = "C:/Users/r-u-t/Desktop/Medias";
     private ViRMA_GlobalsAndActions globals;
-
 
     void Awake()
     {
         actionSet.Activate();
         globals = Player.instance.gameObject.GetComponent<ViRMA_GlobalsAndActions>();
+
         videoPlayer = gameObject.GetComponent<VideoPlayer>();
+        audioSource = gameObject.AddComponent<AudioSource>();
 
         RenderTexture renderTexture = new RenderTexture(1280, 720, 24)
         {
@@ -63,187 +62,209 @@ public class VideoPlayerController : MonoBehaviour
         videoPlayer.targetTexture = renderTexture;
         screen.GetComponent<Renderer>().material.mainTexture = renderTexture;
 
-        // Set the total length when prepare is finished
         videoPlayer.prepareCompleted += (_) => {
             videoProgressBar.GetComponent<Slider>().maxValue = videoPlayer.frameCount;
             TimeSpan totalTime = TimeSpan.FromSeconds(videoPlayer.length);
             durationText.text = "0:00/" + totalTime.Minutes + ":" + totalTime.Seconds.ToString("00");
         };
-        
-        segmentData = new List<ViRMA_GlobalsAndActions.SegmentData>();
-    }
 
-    public void Start()
-    {
-        if (inContext)
-        {
-        segmentData = globals.globalSegmentData[videoName];
-        }
-        // Cross reference (Cell Explorer)
-        //Dictionary<string, SegmentData> videoScrollLine = new List<string>();
+        segmentData = new List<ViRMA_GlobalsAndActions.SegmentData>();
     }
 
     void Update()
     {
-        // Update elapsed time
-        TimeSpan elapsed = TimeSpan.FromSeconds(videoPlayer.time);
-        string elapsedTime = elapsed.Minutes.ToString() + ":" + elapsed.Seconds.ToString("00");
-        durationText.text = Regex.Replace(durationText.text, updateTimeRegex, elapsedTime);
-
-        if (inContext)
+        if (videoPlayer.isPrepared)
         {
-            TimeSpan segmentElapsed = TimeSpan.FromSeconds(videoPlayer.time) - segmentStart;
-            string segmentElapsedTime = segmentElapsed.Minutes.ToString() + ":" + segmentElapsed.Seconds.ToString("00");
-            segmentDurationText.text = Regex.Replace(segmentDurationText.text, updateTimeRegex, segmentElapsedTime);
+            TimeSpan elapsed = TimeSpan.FromSeconds(videoPlayer.time);
+            string elapsedTime = elapsed.Minutes.ToString() + ":" + elapsed.Seconds.ToString("00");
+            durationText.text = Regex.Replace(durationText.text, updateTimeRegex, elapsedTime);
+            videoProgressBar.GetComponent<Slider>().value = videoPlayer.frame;
+        }
+        else if (audioSource.clip != null)
+        {
+            TimeSpan elapsed = TimeSpan.FromSeconds(audioSource.time);
+            string elapsedTime = elapsed.Minutes.ToString() + ":" + elapsed.Seconds.ToString("00");
+            durationText.text = Regex.Replace(durationText.text, updateTimeRegex, elapsedTime);
+            videoProgressBar.GetComponent<Slider>().value = audioSource.time / audioSource.clip.length;
         }
 
-        videoProgressBar.GetComponent<Slider>().value = videoPlayer.frame;
-
-        //  if (inContext){
-        //     if (videoPlayer.isLooping && videoPlayer.frame >= endFrame)
-        //     {
-        //         videoPlayer.frame = startFrame;
-
-        //     }
-        //  }
-        // else {
-        //     //start_frame = segmentData[]
-            
-        // }
-
-        // Update play button text and image
-        playButtonText.text = videoPlayer.isPlaying ? "Pause" : "Play";
-        pauseImage.enabled = videoPlayer.isPlaying;
-        playImage.enabled = !videoPlayer.isPlaying;
+        playButtonText.text = (videoPlayer.isPlaying || audioSource.isPlaying) ? "Pause" : "Play";
+        pauseImage.enabled = (videoPlayer.isPlaying || audioSource.isPlaying);
+        playImage.enabled = !(videoPlayer.isPlaying || audioSource.isPlaying);
 
         MovePlayer();
     }
 
-    private bool CanStep(bool direction)
+    public void SetVideo(string fileName, bool originalVideo = false)
     {
-        if (direction) {
-            if ((ulong)(videoPlayer.frame + 1) > videoPlayer.frameCount)
-                return false;
-        } else {
-            if ((ulong)(videoPlayer.frame - 1) < 0)
-                return false;
-        }
-        return true;
+        PlayMedia(fileName, originalVideo);
     }
 
-    public void FrameForward()
+    private void PlayMedia(string fileName, bool originalMedia = false)
     {
-        if (videoPlayer.isPlaying) {
-            videoPlayer.Pause();
-        }
-        if (CanStep(true)) {
-            videoPlayer.frame++;
-        }
-    }
+        Debug.Log("filename: " + fileName);
+        string lastPartFileName = Path.GetFileNameWithoutExtension(fileName);
+        Debug.Log("lastPartFileName: " + lastPartFileName);
 
-    public void FrameBackward()
-    {
-        if (videoPlayer.isPlaying) {
-            videoPlayer.Pause();
-        }
-        if (CanStep(false)) {
-            videoPlayer.frame--;
-        }
-    }
+        string[] files = Directory.GetFiles(localMediaDirectory, lastPartFileName + ".*");
 
-    private string ParseVideoURL(string fileName, bool originalVideo)
-    {
-        string pattern = @"(\d+)_(\d+)\.jpg$";
-        string result;
-        string videoIndex;
-        string segmentIndex;
+        Debug.Log("Files found: " + string.Join(", ", files));
 
-        Match match = Regex.Match(fileName, pattern);
-        if (match.Success)
+        if (files.Length > 0)
         {
-            videoIndex = match.Groups[1].Value;
-            segmentIndex = match.Groups[2].Value;
+            // If the file is found, determine its type by its extension and play it
+            string foundFile = files[0];
+            string extension = Path.GetExtension(foundFile).ToLower();
+
+            Debug.Log("Found local file: " + foundFile);
+
+            if (extension == ".mp4")
+            {
+                PlayVideo(foundFile);
+            }
+            else if (extension == ".mp3")
+            {
+                PlayAudio(foundFile);
+            }
+            else
+            {
+                Debug.LogError("Unsupported file type: " + extension);
+            }
+        }
+        else if (fileName.Contains("spotify"))
+        {
+            Debug.Log("File not found locally, attempting to download from Spotify: " + fileName);
+            DownloadAndPlayFromSpotify(fileName, lastPartFileName);
         }
         else
         {
-            return "";
+            Debug.LogError("File not found locally and is not a Spotify link: " + fileName);
         }
-
-        if (!originalVideo) {
-            result = $"{videoIndex}/{videoIndex}_{segmentIndex}";
-        } else {
-            result = $"{videoIndex}/{videoIndex}";
-            videoName = videoIndex;
-            activeSegment = int.Parse(segmentIndex);
-        }
-        videoSource.text = $"Source: {result + suffix}"; 
-        
-        return localMediaDirectory + prefix + result + suffix;
     }
 
-    public void SetVideo(string fileName, bool originalVideo=false)
+    private void PlayVideo(string fileName)
     {
-        videoPlayer.url = ParseVideoURL(fileName, originalVideo);
-        if (originalVideo) {
-            exitButton.SetActive(false);
-            videoPlayer.prepareCompleted += (_) => SetContextVideo(fileName);
-        }
+        videoPlayer.url = fileName;
         videoPlayer.Prepare();
+        videoPlayer.Play();
+        videoSource.text = $"Source: {videoPlayer.url}";
+    }
+
+    private void PlayAudio(string fileName)
+    {
+        StartCoroutine(LoadAudioClip(fileName));
+    }
+
+    private IEnumerator<UnityEngine.Networking.UnityWebRequestAsyncOperation> LoadAudioClip(string fileURI)
+    {
+        using (UnityEngine.Networking.UnityWebRequest uwr = UnityEngine.Networking.UnityWebRequestMultimedia.GetAudioClip("file://" + fileURI, AudioType.MPEG))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result == UnityEngine.Networking.UnityWebRequest.Result.ConnectionError || uwr.result == UnityEngine.Networking.UnityWebRequest.Result.ProtocolError)
+            {
+                Debug.LogError(uwr.error);
+            }
+            else
+            {
+                audioSource.clip = UnityEngine.Networking.DownloadHandlerAudioClip.GetContent(uwr);
+                audioSource.Play();
+                videoSource.text = $"Source: {fileURI}";
+            }
+        }
+    }
+
+    private void DownloadAndPlayFromSpotify(string spotifyURI, string lastPartFileName)
+    {
+        // Placeholder for Spotify download logic
+        Debug.Log("Downloading from Spotify: " + spotifyURI);
+
+        // Download with Python script
+
+        string pythonScriptPath = "C:/Users/r-u-t/Desktop/Work/spotify-data-parser/utils/unitySongDownload.py";
+        string arguments = $"{spotifyURI} {lastPartFileName} {localMediaDirectory}";
+
+        System.Diagnostics.ProcessStartInfo start = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "python",
+            Arguments = $"{pythonScriptPath} {arguments}",
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
+        };
+
+        using (System.Diagnostics.Process process = System.Diagnostics.Process.Start(start))
+        {
+            using (System.IO.StreamReader reader = process.StandardOutput)
+            {
+                string result = reader.ReadToEnd();
+                Debug.Log("Results: " + result);
+            }
+        }
+
+        string downloadedFilePath  = Path.Combine(localMediaDirectory, lastPartFileName + ".mp3");
+
+        if (File.Exists(downloadedFilePath ))
+        {
+            // Play the downloaded file
+            PlayAudio(downloadedFilePath );
+        }
+        else
+        {
+            Debug.LogError("Failed to download or save the file from Spotify.");
+        }
     }
 
     public void SetContextVideo(string fileName)
     {
         float progressWidth = videoProgressBar.GetComponent<RectTransform>().rect.width;
         var highlight = GameObject.Find("SegmentHighlight").GetComponent<RectTransform>();
-        //This is disgusting but used to set videoName and activeSegment...
-        ParseVideoURL(fileName, true);
 
         startFrame = segmentData[activeSegment].startFrame;
         endFrame = segmentData[activeSegment].endFrame;
 
         highlight.anchoredPosition = Vector3.right * ((float)startFrame / videoPlayer.frameCount * progressWidth);
         highlight.sizeDelta = new Vector2((float)segmentData[activeSegment].frameCount / videoPlayer.frameCount * progressWidth, highlight.sizeDelta.y);
-        
+
         segmentID.text = $"Segment: {activeSegment}";
 
         videoPlayer.frame = startFrame;
         segmentStart = TimeSpan.FromSeconds(videoPlayer.time);
-
-        
-        //TimeSpan segmentTotalTime = TimeSpan.FromSeconds((double) new decimal(segmentData[activeSegment].frameCount / videoPlayer.frameRate));
-        //segmentDurationText.text = "0:00/" + segmentTotalTime.Minutes + ":" + segmentTotalTime.Seconds.ToString("00");
-        // videoPlayer.Prepare();
-        // videoPlayer.Pause();
     }
-
 
     public void Mute(bool newStatus)
     {
         videoPlayer.SetDirectAudioMute(0, newStatus);
+        audioSource.mute = newStatus;
     }
 
     public void SetPlaybackSpeed(Text label)
     {
-        videoPlayer.playbackSpeed = label.text == "Normal" ? 1.0f : float.Parse(label.text, CultureInfo.InvariantCulture);
+        float speed = label.text == "Normal" ? 1.0f : float.Parse(label.text, CultureInfo.InvariantCulture);
+        videoPlayer.playbackSpeed = speed;
+        audioSource.pitch = speed;
     }
 
     public void Play(TMP_Text t)
     {
-        switch(t.text) {
-            case "Play": {
-                videoPlayer.Play();
+        switch (t.text)
+        {
+            case "Play":
+                if (videoPlayer.isPrepared) videoPlayer.Play();
+                else if (audioSource.clip != null) audioSource.Play();
                 break;
-            }
-            case "Pause": {
-                videoPlayer.Pause();
+            case "Pause":
+                if (videoPlayer.isPlaying) videoPlayer.Pause();
+                else if (audioSource.isPlaying) audioSource.Pause();
                 break;
-            }
         }
     }
 
     public void Loop(bool newStatus)
     {
         videoPlayer.isLooping = newStatus;
+        audioSource.loop = newStatus;
     }
 
     public void DestroySelf()
@@ -260,23 +281,21 @@ public class VideoPlayerController : MonoBehaviour
 
     public void MovePlayer()
     {
-        if (playerMoving) {
-            // Is select (A) pressed 
-            if (selectAction.GetState(handInteracting.handType)) {
-                if (handInteracting) {
-                    
-                    if (transform.parent != handInteracting) {
-                        transform.parent = handInteracting.transform;
-                    }
-                }
-            } else {
+        if (playerMoving)
+        {
+            if (selectAction.GetState(handInteracting.handType))
+            {
                 if (handInteracting)
                 {
-                    if (transform.parent == handInteracting.transform)
-                    {
-                        transform.parent = null;
-                        playerMoving = false;
-                    }
+                    if (transform.parent != handInteracting) transform.parent = handInteracting.transform;
+                }
+            }
+            else
+            {
+                if (handInteracting && transform.parent == handInteracting.transform)
+                {
+                    transform.parent = null;
+                    playerMoving = false;
                 }
             }
         }
