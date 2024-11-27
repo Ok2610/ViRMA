@@ -342,14 +342,28 @@ public class ViRMA_APIController : MonoBehaviour
         remoteThumbnailMediaDirectory = "http://bjth.itu.dk:5005/";
         database = "VBS";
     }
+    private static void SetSpotifyDB(bool isLocal = false, string fileType = "JPG")
+    {
+        useLocalMedia = isLocal;
+        if (!isLocal)
+        {
+            fileType = "JPG";
+        }
+        localMediaType = fileType;
+        localMediaDirectory = "C:/Users/r-u-t/Desktop/Work/spotify-data-parser/data/album_images/";
+        remoteMediaDirectory = "";
+        remoteThumbnailMediaDirectory = "";
+        database = "VBS";
+    }
 
     // private
     private static JSONNode jsonData;
     public static IEnumerator GetRequest(string paramsURL, Action<JSONNode> onSuccess)
     {
         // set correct database settings
-        SetVBS2022(true);
-        //SetLSC2022(true, "DDS"); 
+        //SetVBS2022(true);
+        //SetLSC2022(true, "DDS");
+        SetSpotifyDB(true);
 
         string getRequest = restAPI + paramsURL;
         float beforeWebRequest = 0, afterWebRequest = 0, beforeJsonParse = 0, afterJsonParse = 0;
@@ -398,7 +412,7 @@ public class ViRMA_APIController : MonoBehaviour
         // if API returns a status 404, set the response to null
         if (response == "")
         {
-            Debug.LogWarning("JSON PARSE FAILED: " + paramsURL);
+            Debug.LogWarning("JSON PARSE FAILED: " + restAPI + paramsURL);
             response = null;
         }
         else if (response["status"] != null)
@@ -496,7 +510,7 @@ public class ViRMA_APIController : MonoBehaviour
                 // newCell.ImageName = obj.Value["CubeObjects"][0]["FileName"];
                 // newCell.ImageName = obj.Value["CubeObjects"][0]["FileURI"];
 
-                newCell.ImageName = obj.Value["cubeObjects"][0]["fileURI"];
+                newCell.ImageName = obj.Value["cubeObjects"][0]["thumbnailURI"];
                 Debug.Log(newCell.ImageName);
                 //string imageNameDDS = newCell.ImageName.Substring(0, newCell.ImageName.Length - 4) + ".dds";
                 //newCell.ImageName = imageNameDDS;
@@ -741,13 +755,13 @@ public class ViRMA_APIController : MonoBehaviour
     }
 
     // cell contents and timeline endpoints
-    public static IEnumerator GetCellContents(Query cellQueryData, Action<List<KeyValuePair<int, string>>> onSuccess)
+    public static IEnumerator GetCellContents(Query cellQueryData, Action<List<KeyValuePair<int, string[]>>> onSuccess)
     {
         // OLD: cell/?filters=[{"type":"node","ids":[1001]},{"type":"tag","ids":[55]},{"type":"tag","ids":[23]},{"type":"tag","ids":[1872]},{"type":"tag","ids":[1874]}]&all=[]
 
         // NEW: cell/?xAxis={"type":"node","id":1001}&yAxis={"type":"tag","id":55}&filters=[{"type":"tag","ids":[23]},{"type":"tag","ids":[1872]},{"type":"tag","ids":[1874]}]&all=[]
 
-        List<KeyValuePair<int, string>> results = new List<KeyValuePair<int, string>>();
+        var results = new List<KeyValuePair<int, string[]>>();
 
         string url = "cell?";
 
@@ -798,15 +812,15 @@ public class ViRMA_APIController : MonoBehaviour
         foreach (var obj in jsonData)
         {
             int imageId = obj.Value["id"];
-            string imagePath = obj.Value["fileURI"];
+            string[] imagePath = {obj.Value["thumbnailURI"], obj.Value["fileURI"]};
             //string imageNameDDS = imagePath.Substring(0, imagePath.Length - 4) + ".dds";
-            KeyValuePair<int, string> imageIdPath = new KeyValuePair<int, string>(imageId, imagePath);
+            var imageIdPath = new KeyValuePair<int, string[]>(imageId, imagePath);
             results.Add(imageIdPath);
         }
 
         onSuccess(results);
     }
-    public static IEnumerator GetContextTimeline(DateTime timestamp, int minutes, Action<List<KeyValuePair<int, string>>> onSuccess)
+    public static IEnumerator GetContextTimeline(DateTime timestamp, int minutes, Action<List<KeyValuePair<int, string[]>>> onSuccess)
     {
         Debug.Log("timestamp: " + timestamp);
         Debug.Log("minutes: " + minutes);
@@ -840,7 +854,7 @@ public class ViRMA_APIController : MonoBehaviour
 
         Debug.Log("GetTimeline: " + url); // debugging
 
-        List<KeyValuePair<int, string>> results = new List<KeyValuePair<int, string>>();
+        var results = new List<KeyValuePair<int, string[]>>();
         yield return GetRequest(url, (response) =>
         {
             jsonData = response;
@@ -849,11 +863,11 @@ public class ViRMA_APIController : MonoBehaviour
         foreach (var obj in jsonData)
         {
             int imageId = obj.Value["id"];
-            string imagePath = obj.Value["fileURI"];
-            Debug.Log("imageId: " + imageId + " fileURI: " + imagePath);
-            if (imagePath.Length > 0)
+            string[] imagePath = {obj.Value["thumbnailURI"], obj.Value["fileURI"]};
+            Debug.Log("imageId: " + imageId + " values: " + imagePath);
+            if (imagePath[0].Length > 0)
             {
-                KeyValuePair<int, string> imageIdPath = new KeyValuePair<int, string>(imageId, imagePath);
+                var imageIdPath = new KeyValuePair<int, string[]>(imageId, imagePath);
                 results.Add(imageIdPath);
             }
             else
@@ -1101,11 +1115,11 @@ public class ViRMA_APIController : MonoBehaviour
         }
         onSuccess(hierarchies);
     }
-    public static IEnumerator GetTimeline(List<Query.Filter> cellFiltersForTimeline, Action<List<KeyValuePair<int, string>>> onSuccess)
+    public static IEnumerator GetTimeline(List<Query.Filter> cellFiltersForTimeline, Action<List<KeyValuePair<int, string[]>>> onSuccess)
     {
         // cell?filters=[{'type':'node','ids':['699']},{'type':'tag','ids':['17']},{'type':'tag','ids':['147','132']}]&all=[];
 
-        List<KeyValuePair<int, string>> results = new List<KeyValuePair<int, string>>();
+        List<KeyValuePair<int, string[]>> results = new List<KeyValuePair<int, string[]>>();
 
         if (cellFiltersForTimeline.Count > 0)
         {
@@ -1132,10 +1146,15 @@ public class ViRMA_APIController : MonoBehaviour
             foreach (var obj in jsonData)
             {
                 int imageId = obj.Value["id"];
-                string imagePath = obj.Value["fileURI"];
+                string[] values = {obj.Value["thumbnailURI"], obj.Value["fileURI"]};
+                // string imagePath = obj.Value["thumbnailURI"];
+                // int mediaKey = -obj.Value["id"];
+                // string mediaUri = obj.Value["fileURI"];
                 //string imageNameDDS = imagePath.Substring(0, imagePath.Length - 4) + ".dds";
-                KeyValuePair<int, string> imageIdPath = new KeyValuePair<int, string>(imageId, imagePath);
+                KeyValuePair<int, string[]> imageIdPath = new KeyValuePair<int, string[]>(imageId, values);
+                // KeyValuePair<int, string> mediaIdPath = new KeyValuePair<int, string>(imageId, imagePath);
                 results.Add(imageIdPath);
+                // results.Add(mediaIdPath);
             }
         }
 

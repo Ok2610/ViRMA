@@ -21,6 +21,8 @@ public class ViRMA_TimelineChild : MonoBehaviour
     public int id;
     public string fileName;
 
+    public string mediaURI;
+
     // timeline child data
     public List<Tag> tagsData;      
     public DateTime timestampUTC;
@@ -90,19 +92,21 @@ public class ViRMA_TimelineChild : MonoBehaviour
         }
     }
 
-    public void LoadTimelineChild(int targetId, string targetFilename)
+    public void LoadTimelineChild(int targetId, string[] targetValues)
     {
         //Debug.Log("Target Id: " + targetId);
         id = targetId;
-        fileName = targetFilename;
+        fileName = targetValues[0];
+        mediaURI = targetValues[1];
+        
         name = id + "_" + fileName;
-
         // get the textur
         GetTimelineChildTexture();
 
         // get associated metadata for timeline child (for async fetch)
-        GetTimelineChildMetadata();
+        GetTimelineChildMetadata();  
     }
+    
     public void GetTimelineChildTexture()
     {
         if (fileName.Length > 0)
