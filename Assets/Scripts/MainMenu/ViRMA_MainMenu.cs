@@ -6,7 +6,6 @@ using Valve.VR.InteractionSystem;
 using TMPro;
 using Valve.VR;
 using System.Linq;
-using System.Diagnostics;
 
 public class ViRMA_MainMenu : MonoBehaviour
 {
@@ -734,8 +733,10 @@ public class ViRMA_MainMenu : MonoBehaviour
         // get all time tagsets corresponding to list above 
         string locationTagsetId = "";
         yield return StartCoroutine(ViRMA_APIController.GetTagset("", (tagsetsData) => {
+            
             foreach (Tag tagsetData in tagsetsData)
             {
+                //Debug.Log("tagsetData: " + tagsetData.Label);
                 if (tagsetData.Label == "Top location")
                 {
                     locationTagsetId = tagsetData.Id.ToString();
@@ -810,12 +811,12 @@ public class ViRMA_MainMenu : MonoBehaviour
             if (uiElement.isToggled)
             {
                 UnityEngine.Debug.Log("RemoveFilter: " + tagData.Id);
-                globals.queryController.buildingQuery.RemoveFilter(tagData.Id, "tagset", tagData.Parent.Id); // OK: Changed from tag to tagset
+                globals.queryController.buildingQuery.RemoveFilter(tagData.Id, "tag", tagData.Parent.Id); // OK: Changed from tagset to tag
             }
             else
             {
                 UnityEngine.Debug.Log("AddFilter: " + tagData.Id);
-                globals.queryController.buildingQuery.AddFilter(tagData.Id, "tagset"); // OK: Changed from tag to tagset
+                globals.queryController.buildingQuery.AddFilter(tagData.Id, "tag"); // OK: Changed from tagset to tag
             }
         }
     }
