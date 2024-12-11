@@ -243,7 +243,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
         {
             if (tagData.Label == "Timestamp LOC")
             {
-                if (DateTime.TryParseExact(tagData.Children[0].Label, "M/d/yyyy h:mm:ss tt", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))
+                if (DateTime.TryParseExact(tagData.Children[0].Label, "d/M/yyyy h:mm:ss tt", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))
                 {
                     timestampLOC = parsedTimestamp;
                 }
@@ -251,7 +251,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
             if (tagData.Label == "Timestamp UTC")
             {
                 // Debug.Log("parsedTime:" + timestampUTC);
-                if (DateTime.TryParseExact(tagData.Children[0].Label, "M/d/yyyy h:mm:ss tt", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))                {
+                if (DateTime.TryParseExact(tagData.Children[0].Label, "d/M/yyyy h:mm:ss tt", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))                {
                     timestampUTC = parsedTimestamp;
                 }
             }

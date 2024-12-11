@@ -590,7 +590,7 @@ public class ViRMA_MainMenu : MonoBehaviour
                     string weekdayLabel = weekdayObj.GetComponentInChildren<Text>().text;
                     foreach (Tag weekdayTag in timeTagset.Children)
                     {
-                        if (weekdayTag.Label.Substring(0, 3) == weekdayLabel)
+                        if (weekdayTag.Label.Substring(0,3) == weekdayLabel)
                         {         
                             uiElement.buttonData = weekdayTag;
                             weekdayObj.GetComponent<Button>().onClick.AddListener(() => ToggleTagPickerOption(uiElement));                  
