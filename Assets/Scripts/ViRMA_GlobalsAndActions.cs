@@ -54,20 +54,30 @@ public class ViRMA_GlobalsAndActions : MonoBehaviour
     public SteamVR_Action_Boolean timeline_Back;
     public Dictionary<string, List<SegmentData>> globalSegmentData = new Dictionary<string, List<SegmentData>>();
     public struct SegmentData {
-        public int startFrame;
-        public int endFrame;
-        public int frameCount;
+        // public int startFrame;
+        // public int endFrame;
+        // public int frameCount;
 
-        public SegmentData(int start, int end, int frameCount) {
-            startFrame = start;
-            endFrame = end;
-            this.frameCount = frameCount;
+        public float startTs;
+        public float endTs;
+        public float duration;
+
+        // public SegmentData(int start, int end, int frameCount) {
+        //     startFrame = start;
+        //     endFrame = end;
+        //     this.frameCount = frameCount;
+        // }
+
+        public SegmentData(float start, float end) {
+            startTs = start;
+            endTs = end;
+            duration = endTs - startTs;
         }
 
-        public SegmentData(List<int> data) {
-            startFrame = data[0];
-            endFrame = data[1];
-            frameCount = data[2];
+        public SegmentData(Dictionary<string,float> data) {
+            startTs = data["start"];
+            endTs = data["end"];
+            duration = endTs - startTs;
         }
     }
 
@@ -94,9 +104,9 @@ public class ViRMA_GlobalsAndActions : MonoBehaviour
     // Temp Until fields are added to the database
     private void LoadVideoData()
     {
-        string jsonPath = "Assets/Resources/reduced_shots_frames.json";
+        string jsonPath = "Assets/Resources/video_times.json";
         string json = System.IO.File.ReadAllText(jsonPath);
-        var videoData = JsonConvert.DeserializeObject<Dictionary<string, List<List<int>>>>(json);
+        var videoData = JsonConvert.DeserializeObject<Dictionary<string, List<Dictionary<string, float>>>>(json);
 
         foreach (var entry in videoData) {
             List<SegmentData> sd = new List<SegmentData>();

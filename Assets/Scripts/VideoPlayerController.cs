@@ -38,8 +38,8 @@ public class VideoPlayerController : MonoBehaviour
     // Main player info
     private string videoName = "";
     private int activeSegment;
-    private int startFrame;
-    private int endFrame;
+    private float startTs;
+    private float endTs;
     public TimeSpan segmentStart;
     private List<ViRMA_GlobalsAndActions.SegmentData> segmentData;
 
@@ -106,44 +106,44 @@ public class VideoPlayerController : MonoBehaviour
         string lastPartFileName = Path.GetFileNameWithoutExtension(fileName);
         Debug.Log("lastPartFileName: " + lastPartFileName);
 
-        string[] files = Directory.GetFiles(localMediaDirectory, lastPartFileName + ".*");
+        //string[] files = Directory.GetFiles(localMediaDirectory, lastPartFileName + ".*");
 
-        Debug.Log("Files found: " + string.Join(", ", files));
+        //Debug.Log("Files found: " + string.Join(", ", files));
 
-        if (files.Length > 0)
+        // if (files.Length > 0)
+        // {
+        //     // If the file is found, determine its type by its extension and play it
+        //     string foundFile = files[0];
+        //     string extension = Path.GetExtension(foundFile).ToLower();
+
+            // Debug.Log("Found local file: " + foundFile);
+
+        if (fileName.Contains(".mp4"))
         {
-            // If the file is found, determine its type by its extension and play it
-            string foundFile = files[0];
-            string extension = Path.GetExtension(foundFile).ToLower();
-
-            Debug.Log("Found local file: " + foundFile);
-
-            if (extension == ".mp4")
-            {
-                PlayVideo(foundFile);
-            }
-            else if (extension == ".mp3")
-            {
-                PlayAudio(foundFile);
-            }
-            else
-            {
-                Debug.LogError("Unsupported file type: " + extension);
-            }
+            PlayVideo(fileName);
         }
-        else if (fileName.Contains("spotify"))
+        else if (fileName.Contains(".mp3"))
         {
-            Debug.Log("File not found locally, attempting to download from Spotify: " + fileName);
-            DownloadAndPlayFromSpotify(fileName, lastPartFileName);
+            PlayAudio(fileName);
         }
         else
         {
-            Debug.LogError("File not found locally and is not a Spotify link: " + fileName);
+            // Debug.LogError("Unsupported file type: " + extension);
         }
+        // else if (fileName.Contains("spotify"))
+        // {
+        //     Debug.Log("File not found locally, attempting to download from Spotify: " + fileName);
+        //     DownloadAndPlayFromSpotify(fileName, lastPartFileName);
+        // }
+        // else
+        // {
+        //     Debug.LogError("File not found locally and is not a Spotify link: " + fileName);
+        // }
     }
 
     private void PlayVideo(string fileName)
     {
+        Debug.Log("video: " + fileName);
         videoPlayer.url = fileName;
         videoPlayer.Prepare();
         videoPlayer.Play();
@@ -221,16 +221,15 @@ public class VideoPlayerController : MonoBehaviour
         float progressWidth = videoProgressBar.GetComponent<RectTransform>().rect.width;
         var highlight = GameObject.Find("SegmentHighlight").GetComponent<RectTransform>();
 
-        startFrame = segmentData[activeSegment].startFrame;
-        endFrame = segmentData[activeSegment].endFrame;
-
-        highlight.anchoredPosition = Vector3.right * ((float)startFrame / videoPlayer.frameCount * progressWidth);
-        highlight.sizeDelta = new Vector2((float)segmentData[activeSegment].frameCount / videoPlayer.frameCount * progressWidth, highlight.sizeDelta.y);
+        startTs = segmentData[activeSegment].startTs;
+        endTs = segmentData[activeSegment].endTs;
+        
+        highlight.anchoredPosition = Vector3.right * (startTs * progressWidth);
+        highlight.sizeDelta = new Vector2(segmentData[activeSegment].duration * progressWidth, highlight.sizeDelta.y);
 
         segmentID.text = $"Segment: {activeSegment}";
 
-        videoPlayer.frame = startFrame;
-        segmentStart = TimeSpan.FromSeconds(videoPlayer.time);
+        segmentStart = TimeSpan.FromSeconds(startTs);
     }
 
     public void Mute(bool newStatus)

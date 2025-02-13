@@ -329,6 +329,21 @@ public class ViRMA_APIController : MonoBehaviour
         remoteThumbnailMediaDirectory = "";
         database = "LSC";
     }
+
+    private static void Setsmalldb(bool isLocal = false, string fileType = "JPG")
+    {
+        useLocalMedia = isLocal;
+        if (!isLocal)
+        {
+            fileType = "JPG";
+        }
+        localMediaType = fileType;
+        localMediaDirectory = "";
+        remoteMediaDirectory = "";
+        remoteThumbnailMediaDirectory = "";
+        database = "VBS";
+    }
+
     private static void SetVBS2022(bool isLocal = false, string fileType = "JPG")
     {
         useLocalMedia = isLocal;
@@ -351,7 +366,7 @@ public class ViRMA_APIController : MonoBehaviour
         }
         localMediaType = fileType;
         localMediaDirectory = "C:/Users/r-u-t/Desktop/Work/spotify-data-parser/data/album_images/";
-        remoteMediaDirectory = "";
+        remoteMediaDirectory = "C:/Users/CRESS/DemoMetadataCube/datasets";
         remoteThumbnailMediaDirectory = "";
         database = "VBS";
     }
@@ -363,7 +378,8 @@ public class ViRMA_APIController : MonoBehaviour
         // set correct database settings
 
         //SetVBS2022(true);
-        SetLSC2022(true);
+        //SetLSC2022(true);
+        Setsmalldb(false);
         //SetSpotifyDB(true);
 
         string getRequest = restAPI + paramsURL;
@@ -480,11 +496,9 @@ public class ViRMA_APIController : MonoBehaviour
         if (query.Filters.Count > 0)
         {
             url += "&filters=[";
+            var filterTags = new Dictionary<string, List<int>>();
             foreach (Query.Filter filter in query.Filters)
             {
-                //string typeId = filter.Type == "Tagset" ? "tagId" : "nodeId";
-                //url += "{'type': '" + filter.Type.ToLower() + "', '" + typeId + "': " + filter.Id + "},";
-
                 string idString = string.Join("','", filter.Ids);
                 url += "{'type': '" + filter.Type.ToLower() + "', 'ids': ['" + idString + "']},";
             }
@@ -950,6 +964,31 @@ public class ViRMA_APIController : MonoBehaviour
         }
 
         onSuccess(results);
+    }
+    public static IEnumerator GetTag(int targetId, Action<Tag> onSuccess)
+    {
+        // /api/tag/{id}
+        string url = "tag/" + targetId;
+        yield return GetRequest(url, (response) =>
+        {
+            jsonData = response;
+        });
+        Tag t = new Tag
+        {
+            Id = jsonData["id"],
+            Label = jsonData["name"]
+        };
+        url = "tagset/" + jsonData["tagsetId"];
+        yield return GetRequest(url, (response) =>
+        {
+            jsonData = response;
+        });
+        t.Parent = new Tag
+        {
+            Id = jsonData["id"],
+            Label = jsonData["name"]
+        };
+        onSuccess(t);
     }
     public static IEnumerator GetTagNodes(int targetId, Action<List<int>> onSuccess)
     {

@@ -364,7 +364,7 @@ public class ViRMA_UiElement : MonoBehaviour, IPointerEnterHandler, IPointerExit
 			}
 		}	
 	}
-	private void BtnToggleController()
+       private void BtnToggleController()
     {
 		if (toggle == true)
 		{

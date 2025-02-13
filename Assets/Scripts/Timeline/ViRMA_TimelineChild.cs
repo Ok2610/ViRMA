@@ -22,6 +22,7 @@ public class ViRMA_TimelineChild : MonoBehaviour
     public string fileName;
 
     public string mediaURI;
+    public string videoURI;
 
     // timeline child data
     public List<Tag> tagsData;      
@@ -96,15 +97,27 @@ public class ViRMA_TimelineChild : MonoBehaviour
     {
         //Debug.Log("Target Id: " + targetId);
         id = targetId;
+        
         fileName = targetValues[0];
         mediaURI = targetValues[1];
         
         name = id + "_" + fileName;
-        // get the textur
-        GetTimelineChildTexture();
 
         // get associated metadata for timeline child (for async fetch)
-        GetTimelineChildMetadata();  
+        GetTimelineChildMetadata();
+        // If it contains a video path, change mediaURI
+        // foreach (Tag tagData in tagsData)
+        // {
+        //     if (tagData.Label == "Video Path") 
+        //     {
+        //         mediaURI = tagData.Children[0].Label;
+        //         break;
+        //     }
+        // }
+        // get the texture        
+        GetTimelineChildTexture();
+
+  
     }
     
     public void GetTimelineChildTexture()
@@ -254,6 +267,9 @@ public class ViRMA_TimelineChild : MonoBehaviour
                 if (DateTime.TryParseExact(tagData.Children[0].Label, "d/M/yyyy h:mm:ss tt", null, System.Globalization.DateTimeStyles.None, out DateTime parsedTimestamp))                {
                     timestampUTC = parsedTimestamp;
                 }
+            }
+            if (tagData.Label == "Video Path") {
+                videoURI = tagData.Children[0].Label;
             }
         }
         LoadTimelineChild();

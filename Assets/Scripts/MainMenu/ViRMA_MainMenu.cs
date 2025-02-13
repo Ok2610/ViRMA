@@ -465,60 +465,56 @@ public class ViRMA_MainMenu : MonoBehaviour
             }
             else if (activeFilter.Type == "tag")
             {
-                int parentIdIndex = activeFilter.FilterId.IndexOf("_");
-                string parentId = activeFilter.FilterId.Substring(parentIdIndex + 1);
-                StartCoroutine(ViRMA_APIController.GetTagset(parentId+1, (tagsetData) => {
-                    foreach (Tag tagData in tagsetData)
+                foreach (int id in activeFilter.Ids)
+                {
+                    StartCoroutine(ViRMA_APIController.GetTag(id, (tagData) =>
                     {
-                        foreach (int id in activeFilter.Ids)
+                        if (tagData.Id == id)
                         {
-                            if (tagData.Id == id)
+                            GameObject directFilterObj = Instantiate(directFilterPrefab, directFilterParent);
+                            directFilterObj.GetComponent<ViRMA_DirectFilterOption>().filterType = "tag";
+                            directFilterObj.GetComponent<ViRMA_DirectFilterOption>().directFilterData = tagData;
+
+                            string adjustLabel = tagData.Label;
+
+                            // adjust appearance of hour tags as direct filters
+                            if (tagData.Parent.Label == "Hour")
                             {
-                                GameObject directFilterObj = Instantiate(directFilterPrefab, directFilterParent);
-                                directFilterObj.GetComponent<ViRMA_DirectFilterOption>().filterType = "tag";
-                                directFilterObj.GetComponent<ViRMA_DirectFilterOption>().directFilterData = tagData;
-
-                                string adjustLabel = tagData.Label;
-
-                                // adjust appearance of hour tags as direct filters
-                                if (tagData.Parent.Label == "Hour")
+                                if (tagData.Label.Length == 1)
                                 {
-                                    if (tagData.Label.Length == 1)
-                                    {
-                                        adjustLabel = "0" + tagData.Label + ":00";
-                                    }
-                                    else
-                                    {
-                                        adjustLabel = tagData.Label + ":00";
-                                    }
+                                    adjustLabel = "0" + tagData.Label + ":00";
                                 }
-
-                                // adjust the appearance of date tags as direct filters
-                                if (tagData.Parent.Label == "Day within month")
+                                else
                                 {
-                                    if (tagData.Label == "1") 
-                                    {
-                                        adjustLabel = "1st";
-                                    }
-                                    else if (tagData.Label == "2")
-                                    {
-                                        adjustLabel = "2nd";
-                                    }
-                                    else if (tagData.Label == "3")
-                                    {
-                                        adjustLabel = "3rd";
-                                    }
-                                    else
-                                    {
-                                        adjustLabel = tagData.Label + "th";
-                                    }
+                                    adjustLabel = tagData.Label + ":00";
                                 }
-
-                                directFilterObj.GetComponent<ViRMA_DirectFilterOption>().labelText.text = adjustLabel;
                             }
+
+                            // adjust the appearance of date tags as direct filters
+                            if (tagData.Parent.Label == "Day within month")
+                            {
+                                if (tagData.Label == "1")
+                                {
+                                    adjustLabel = "1st";
+                                }
+                                else if (tagData.Label == "2")
+                                {
+                                    adjustLabel = "2nd";
+                                }
+                                else if (tagData.Label == "3")
+                                {
+                                    adjustLabel = "3rd";
+                                }
+                                else
+                                {
+                                    adjustLabel = tagData.Label + "th";
+                                }
+                            }
+
+                            directFilterObj.GetComponent<ViRMA_DirectFilterOption>().labelText.text = adjustLabel;
                         }
-                    }
-                }));      
+                    }));
+                }      
             }
         }
     }
@@ -737,7 +733,7 @@ public class ViRMA_MainMenu : MonoBehaviour
             foreach (Tag tagsetData in tagsetsData)
             {
                 //Debug.Log("tagsetData: " + tagsetData.Label);
-                if (tagsetData.Label == "Top location")
+                if (tagsetData.Label == "Collection")
                 {
                     locationTagsetId = tagsetData.Id.ToString();
                 }
@@ -746,7 +742,7 @@ public class ViRMA_MainMenu : MonoBehaviour
 
         List<Tag> locationTagsetData = new List<Tag>();
         yield return StartCoroutine(ViRMA_APIController.GetTagset(locationTagsetId, (tagsetData) => {
-            locationTagsetData = tagsetData.OrderBy(s => s.Label).ToList();
+            locationTagsetData = tagsetData.Where(x => x.Label != "Collection").OrderBy(s => s.Label).ToList();
         }));
 
         for (int i = 0; i < locationTagsetData.Count; i++)
@@ -816,7 +812,7 @@ public class ViRMA_MainMenu : MonoBehaviour
             else
             {
                 UnityEngine.Debug.Log("AddFilter: " + tagData.Id);
-                globals.queryController.buildingQuery.AddFilter(tagData.Id, "tag"); // OK: Changed from tagset to tag
+                globals.queryController.buildingQuery.AddFilter(tagData.Id, "tag", tagData.Parent.Id); // OK: Changed from tagset to tag
             }
         }
     }

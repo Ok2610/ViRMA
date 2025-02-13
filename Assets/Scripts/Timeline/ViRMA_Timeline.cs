@@ -6,7 +6,6 @@ using Valve.VR;
 using Valve.VR.InteractionSystem;
 using TMPro;
 using System.Linq;
-using UnityEditor.PackageManager;
 
 public class ViRMA_Timeline : MonoBehaviour
 {
@@ -463,7 +462,7 @@ public class ViRMA_Timeline : MonoBehaviour
 
         if (isContextTimeline && mainVideoPlayer == null) {
             mainVideoPlayer = SpawnVideoPlayer(true);
-            mainVideoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetContextTimelineChild.GetComponent<ViRMA_TimelineChild>().mediaURI, true);
+            mainVideoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetContextTimelineChild.GetComponent<ViRMA_TimelineChild>().videoURI, true);
         }
     }
 
@@ -709,7 +708,7 @@ public class ViRMA_Timeline : MonoBehaviour
             if (btnOption.btnType.ToLower() == "play")
             {
                 var videoPlayer = SpawnVideoPlayer();
-                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetTimelineChild.mediaURI);
+                videoPlayer.GetComponent<VideoPlayerController>().SetVideo(targetTimelineChild.videoURI);
             }
         }
     }
